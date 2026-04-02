@@ -1,0 +1,8 @@
+name: deVDemAuth
+version: '1.0-SNAPSHOT'
+main: ru.devdem.devdemAuth.DevdemAuth
+api-version: '1.21'
+load: STARTUP
+authors: [ deVDem ]
+description: Only for deVDem MC HUB
+website: devdem.ru/mc-hub
