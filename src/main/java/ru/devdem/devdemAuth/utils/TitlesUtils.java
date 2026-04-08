@@ -9,7 +9,7 @@ public class TitlesUtils {
     public static Title joinTitle = Title.title(
             Component.text("§aУСПЕШНЫЙ ВХОД", TextColor.color(100, 255, 100)),
             Component.text("Ожидайте входа..")
-            );
+    );
     public static Title registerTitle = Title.title(
             Component.text("§bРЕГИСТРАЦИЯ", TextColor.color(300000)),
             Component.text("Введите /reg пароль")

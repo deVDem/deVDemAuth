@@ -17,6 +17,8 @@ public class DevdemUser {
     private int id;
     private String username;
 
+    public Timestamp lastHandled;
+
     public enum UserType {
         OFFLINE,
         ONLINE,
@@ -183,7 +185,7 @@ public class DevdemUser {
             if (rs.next()) {
                 return DevdemUser.fromResultSet(rs);
             } else {
-                throw new SQLException("Такого пользователя нет "+username);
+                throw new SQLException("Такого пользователя нет " + username);
             }
         } catch (SQLException e) {
             log.error("Ошибка SQL: ", e);

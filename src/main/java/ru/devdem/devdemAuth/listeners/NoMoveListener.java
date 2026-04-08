@@ -25,7 +25,6 @@ public class NoMoveListener implements Listener {
     public Set<DevdemUser> loginUsers = new HashSet<>();
 
 
-
     @EventHandler
     public void onPlayerDisconnect(PlayerQuitEvent event) {
         DevdemUser user = searchByName(event.getPlayer().getName());
@@ -106,6 +105,14 @@ public class NoMoveListener implements Listener {
 
     private void handleEvent(Player player) {
         DevdemUser user = searchByName(player.getName());
+        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+        if (user.lastHandled == null) {
+            user.lastHandled = now;
+        }
+        if ((now.getTime() - user.lastHandled.getTime()) <= 2500) { // лучше не спамить каждый тик в чат и тайтлом
+            return;
+        }
+        user.lastHandled = now;
         if (user.getStatus() == DevdemUser.Status.LOGIN) {
             player.showTitle(TitlesUtils.joinTitle);
         } else if (user.getStatus() == DevdemUser.Status.REGISTRATION) {
@@ -117,7 +124,6 @@ public class NoMoveListener implements Listener {
             player.sendMessage(Component.text("Ты скорее всего уже авторизовался."));
             player.sendMessage(Component.text("Подожди подключение к серверу.."));
         }
-
     }
 
     public DevdemUser searchByName(String name) {

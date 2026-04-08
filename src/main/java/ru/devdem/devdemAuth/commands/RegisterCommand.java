@@ -34,7 +34,7 @@ public class RegisterCommand implements BasicCommand {
             sender.sendMessage(Component.text("Неправильно введена команда. /reg пароль"));
         }
         String password = args[0];
-        sender.sendMessage(Component.text("Ваш новый пароль: "+password));
+        sender.sendMessage(Component.text("Ваш новый пароль: " + password));
         sender.sendMessage(Component.text("Регистрация.."));
         user.setSalt(PasswordUtils.generateSalt());
         user.setPasswordHash(PasswordUtils.hashPassword(password, user.getSalt()));
