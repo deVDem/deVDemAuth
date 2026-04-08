@@ -56,7 +56,7 @@ public class DatabaseManager {
     }
 
     public Connection getConnection() throws SQLException {
-        if(!connected) {
+        if (!connected) {
             connect();
             connected = true;
         }

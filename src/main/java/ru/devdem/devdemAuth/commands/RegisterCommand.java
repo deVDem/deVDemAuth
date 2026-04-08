@@ -9,6 +9,9 @@ import ru.devdem.devdemAuth.DevdemAuth;
 import ru.devdem.devdemAuth.classes.DevdemUser;
 import ru.devdem.devdemAuth.listeners.NoMoveListener;
 import ru.devdem.devdemAuth.utils.PasswordUtils;
+import ru.devdem.devdemAuth.utils.TitlesUtils;
+
+import java.util.Objects;
 
 public class RegisterCommand implements BasicCommand {
 
@@ -31,7 +34,7 @@ public class RegisterCommand implements BasicCommand {
             sender.sendMessage(Component.text("Неправильно введена команда. /reg пароль"));
         }
         String password = args[0];
-        sender.sendMessage(Component.text("Ваш новый пароль: "+password));
+        sender.sendMessage(Component.text("Ваш новый пароль: " + password));
         sender.sendMessage(Component.text("Регистрация.."));
         user.setSalt(PasswordUtils.generateSalt());
         user.setPasswordHash(PasswordUtils.hashPassword(password, user.getSalt()));
@@ -42,10 +45,11 @@ public class RegisterCommand implements BasicCommand {
             sender.sendMessage(Component.text("Успешная регистрация!"));
             user.setStatus(DevdemUser.Status.JOINING);
             DevdemAuth.ConnectUser(sender.getServer().getPlayer(sender.getName()));
+            sender.showTitle(TitlesUtils.joinTitle);
         } else {
             sender.sendMessage(Component.text("Ошибка регистрации.."));
             sender.sendMessage(Component.text("Перезайдите на сервер"));
-            //TODO: надо сделать кик игрока
+            Objects.requireNonNull(sender.getServer().getPlayer(sender.getName())).kick(Component.text("Ошибка: не удалось зарегистрировать вас. Перезайдите позже"));
         }
 
     }

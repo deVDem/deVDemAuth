@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import ru.devdem.devdemAuth.DevdemAuth;
 import ru.devdem.devdemAuth.classes.DevdemUser;
+import ru.devdem.devdemAuth.utils.TitlesUtils;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -47,7 +48,7 @@ public class NoMoveListener implements Listener {
         user.setNewDate(Timestamp.valueOf(LocalDateTime.now()));
         loginUsers.add(user);
         if (user.getType() == DevdemUser.UserType.BEDROCK || user.getType() == DevdemUser.UserType.ONLINE) {
-            player.sendMessage(Component.text("Успешный вход. Приятной игры!"));
+            player.showTitle(TitlesUtils.joinTitle);
             user.setLastIp(user.getNewIp());
             user.setLastDate(user.getNewDate());
             user.setStatus(DevdemUser.Status.JOINING);
@@ -58,7 +59,7 @@ public class NoMoveListener implements Listener {
         if (shouldAutoLogin(ip, user.getLastIp(), user.getLastDate().getTime()) &&
                 (user.getPasswordHash() != null || !Objects.equals(user.getPasswordHash().toLowerCase(), "null"))) {
             // успешный вход по авто-логину
-            player.sendMessage(Component.text("Успешный авто-вход. Приятной игры!"));
+            player.showTitle(TitlesUtils.joinTitle);
             user.setLastIp(user.getNewIp());
             user.setLastDate(user.getNewDate());
             user.setStatus(DevdemUser.Status.JOINING);
@@ -68,17 +69,11 @@ public class NoMoveListener implements Listener {
             // запрашиваем пароль.
             if (user.getPasswordHash() == null || Objects.equals(user.getPasswordHash().toLowerCase(), "null")) {
                 // регистрируемся
-                player.sendMessage(Component.text("Привет, игрок. Ты, скорее всего, уже играли на этом сервере, но сейчас потребуется авторизация."));
-                player.sendMessage(Component.text("Для регистрации пропиши /reg [пароль]"));
-                player.sendMessage(Component.text("Пример: /reg 12371"));
-                player.sendMessage(Component.text("Рекомендую использовать сложный пароль."));
-                player.sendMessage(Component.text("Работает авто-логин по IP-адресу устройства и последнему входу"));
-                player.sendMessage(Component.text("Подробнее: https://hub.devdem.ru/updates/"));
+                player.showTitle(TitlesUtils.registerTitle);
                 user.setStatus(DevdemUser.Status.REGISTRATION);
             } else {
                 // логин
-                player.sendMessage(Component.text("С возвращением! Введи свой пароль. /log [пароль]"));
-                player.sendMessage(Component.text("Пример: /log 12371"));
+                player.showTitle(TitlesUtils.loginTitle);
                 user.setStatus(DevdemUser.Status.LOGIN);
             }
         }
@@ -98,7 +93,6 @@ public class NoMoveListener implements Listener {
     public void onPlayerMove(PlayerMoveEvent event) {
         // блокируем любые передвижения на сервере
         event.setTo(event.getFrom());
-        event.getPlayer().sendMessage(Component.text("Вы должны авторизоваться"));
         handleEvent(event.getPlayer());
         event.setCancelled(true);
     }
@@ -111,12 +105,18 @@ public class NoMoveListener implements Listener {
 
     private void handleEvent(Player player) {
         DevdemUser user = searchByName(player.getName());
+        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+        if (user.lastHandled == null) {
+            user.lastHandled = now;
+        }
+        if ((now.getTime() - user.lastHandled.getTime()) <= 2500) { // лучше не спамить каждый тик в чат и тайтлом
+            return;
+        }
+        user.lastHandled = now;
         if (user.getStatus() == DevdemUser.Status.LOGIN) {
-            player.sendMessage(Component.text("Введите свой пароль /log [пароль]"));
-            player.sendMessage(Component.text("Пример: /log 12371"));
+            player.showTitle(TitlesUtils.joinTitle);
         } else if (user.getStatus() == DevdemUser.Status.REGISTRATION) {
-            player.sendMessage(Component.text("Для регистрации пропиши /reg [пароль]"));
-            player.sendMessage(Component.text("Пример: /reg 12371"));
+            player.showTitle(TitlesUtils.registerTitle);
         } else if (user.getStatus() == DevdemUser.Status.JOINING) {
             player.sendMessage(Component.text("Приятной игры!"));
             DevdemAuth.ConnectUser(player); // я надеюсь временное решение...
@@ -124,7 +124,6 @@ public class NoMoveListener implements Listener {
             player.sendMessage(Component.text("Ты скорее всего уже авторизовался."));
             player.sendMessage(Component.text("Подожди подключение к серверу.."));
         }
-
     }
 
     public DevdemUser searchByName(String name) {
