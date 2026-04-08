@@ -9,6 +9,7 @@ import ru.devdem.devdemAuth.DevdemAuth;
 import ru.devdem.devdemAuth.classes.DevdemUser;
 import ru.devdem.devdemAuth.listeners.NoMoveListener;
 import ru.devdem.devdemAuth.utils.PasswordUtils;
+import ru.devdem.devdemAuth.utils.TitlesUtils;
 
 public class LoginCommand implements BasicCommand {
 
@@ -32,6 +33,7 @@ public class LoginCommand implements BasicCommand {
         String password = args[0];
         if (PasswordUtils.verifyPassword(password, user.getSalt(), user.getPasswordHash())) {
             sender.sendMessage(Component.text("Успешный вход."));
+            sender.showTitle(TitlesUtils.joinTitle);
             user.setLastIp(user.getNewIp());
             user.setLastDate(user.getNewDate());
             user.setStatus(DevdemUser.Status.JOINING);
