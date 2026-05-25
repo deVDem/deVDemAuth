@@ -178,7 +178,7 @@ public class DevdemUser {
         DevdemUser user;
         try (Connection conn = manager.getConnection()) {
             var stmt = conn.prepareStatement(
-                    "SELECT * FROM `devdem_users` WHERE username = ?"
+                    "SELECT * FROM `users` WHERE username = ?"
             );
             stmt.setString(1, username);
             var rs = stmt.executeQuery(); // ищем сначала пользователя
@@ -199,7 +199,7 @@ public class DevdemUser {
         }
         try (Connection conn = manager.getConnection()) {
             var stmtup = conn.prepareStatement(
-                    "UPDATE `devdem_users` SET" +
+                    "UPDATE `users` SET" +
                             "`username`=?," +
                             "`type`=?," +
                             "`uuid`=?," +
