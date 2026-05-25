@@ -13,31 +13,33 @@ public class DatabaseManager {
     private final String database;
     private final String username;
     private final String password;
+    private final boolean useSSL;
 
     private static DatabaseManager instance;
     private boolean connected;
 
-    private DatabaseManager(String host, int port, String database, String username, String password) {
+    private DatabaseManager(String host, int port, String database, String username, String password, boolean useSSL) {
         this.host = host;
         this.port = port;
         this.database = database;
         this.username = username;
         this.password = password;
+        this.useSSL = useSSL;
     }
 
     public static DatabaseManager getInstance() {
         if (instance != null) {
             return instance;
         } else {
-            throw new NullPointerException("Database ещё не был создан.");
+            throw new IllegalStateException("Database ещё не был создан.");
         }
     }
 
-    public static DatabaseManager getInstance(String host, int port, String database, String username, String password) {
+    public static DatabaseManager getInstance(String host, int port, String database, String username, String password, boolean useSSL) {
         if (instance != null) {
             return instance;
         } else {
-            instance = new DatabaseManager(host, port, database, username, password);
+            instance = new DatabaseManager(host, port, database, username, password, useSSL);
             return instance;
         }
     }
@@ -45,11 +47,16 @@ public class DatabaseManager {
     public void connect() {
         HikariConfig config = new HikariConfig();
 
-        config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database);
+        config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database
+                + "?useSSL=" + useSSL
+                + "&allowPublicKeyRetrieval=true"
+                + "&serverTimezone=UTC");
         config.setUsername(username);
         config.setPassword(password);
 
         config.setMaximumPoolSize(10);
+        config.setMinimumIdle(1);
+        config.setPoolName("deVDemAuth-Hikari");
         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
         dataSource = new HikariDataSource(config);
@@ -67,6 +74,7 @@ public class DatabaseManager {
         if (dataSource != null) {
             connected = false;
             dataSource.close();
+            dataSource = null;
         }
     }
 }

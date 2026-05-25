@@ -6,15 +6,18 @@ import net.kyori.adventure.title.Title;
 
 public class TitlesUtils {
 
-    public static Title joinTitle = Title.title(
-            Component.text("§aУСПЕШНЫЙ ВХОД", TextColor.color(100, 255, 100)),
+    private TitlesUtils() {
+    }
+
+    public static final Title joinTitle = Title.title(
+            Component.text("УСПЕШНЫЙ ВХОД", TextColor.color(100, 255, 100)),
             Component.text("Ожидайте входа..")
     );
-    public static Title registerTitle = Title.title(
-            Component.text("§bРЕГИСТРАЦИЯ", TextColor.color(300000)),
+    public static final Title registerTitle = Title.title(
+            Component.text("РЕГИСТРАЦИЯ", TextColor.color(300000)),
             Component.text("Введите /reg пароль")
     );
-    public static Title loginTitle = Title.title(
+    public static final Title loginTitle = Title.title(
             Component.text("АВТОРИЗАЦИЯ", TextColor.color(300000)),
             Component.text("Введите /log пароль")
     );

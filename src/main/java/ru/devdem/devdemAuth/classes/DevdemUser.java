@@ -4,11 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.devdem.devdemAuth.utils.DatabaseManager;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Objects;
 
 public class DevdemUser {
@@ -25,7 +23,14 @@ public class DevdemUser {
         BEDROCK;
 
         public static UserType fromString(String value) {
-            return UserType.valueOf(value.toUpperCase());
+            if (value == null || value.isBlank()) {
+                return OFFLINE;
+            }
+            try {
+                return UserType.valueOf(value.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                return OFFLINE;
+            }
         }
     }
 
@@ -48,9 +53,6 @@ public class DevdemUser {
     private Timestamp newDate;
 
     private static DatabaseManager manager;
-
-    public boolean canyouagain = false;
-
 
     public DevdemUser() {
     }
@@ -175,17 +177,17 @@ public class DevdemUser {
 
     public static DevdemUser getUserByName(String username) {
         manager = DatabaseManager.getInstance();
-        DevdemUser user;
-        try (Connection conn = manager.getConnection()) {
-            var stmt = conn.prepareStatement(
-                    "SELECT * FROM `users` WHERE username = ?"
-            );
+        try (Connection conn = manager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT * FROM `users` WHERE username = ?"
+             )) {
             stmt.setString(1, username);
-            var rs = stmt.executeQuery(); // ищем сначала пользователя
-            if (rs.next()) {
-                return DevdemUser.fromResultSet(rs);
-            } else {
-                throw new SQLException("Такого пользователя нет " + username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return DevdemUser.fromResultSet(rs);
+                } else {
+                    throw new SQLException("Такого пользователя нет " + username);
+                }
             }
         } catch (SQLException e) {
             log.error("Ошибка SQL: ", e);
@@ -193,34 +195,35 @@ public class DevdemUser {
         return null; //пользователя нет в БД, кикаем, что-то с velocity.
     }
 
-    public void update() {
+    public boolean update() {
         if (manager == null) {
             manager = DatabaseManager.getInstance();
         }
-        try (Connection conn = manager.getConnection()) {
-            var stmtup = conn.prepareStatement(
-                    "UPDATE `users` SET" +
+        try (Connection conn = manager.getConnection();
+             PreparedStatement stmtup = conn.prepareStatement(
+                     "UPDATE `users` SET " +
                             "`username`=?," +
                             "`type`=?," +
                             "`uuid`=?," +
                             "`lastip`=?," +
                             "`lastdate`=?," +
-                            "`passwordHash`=?," +
+                            "`passwordhash`=?," +
                             "`salt`=?" +
                             " WHERE `id` = ?"
-            );
+             )) {
             stmtup.setString(1, username);
-            stmtup.setString(2, type.toString());
+            stmtup.setString(2, Objects.requireNonNullElse(type, UserType.OFFLINE).toString());
             stmtup.setString(3, uuid);
             stmtup.setString(4, lastIp);
             stmtup.setTimestamp(5, Objects.requireNonNullElseGet(lastDate, () -> Timestamp.valueOf(LocalDateTime.now())));
             stmtup.setString(6, passwordHash);
             stmtup.setString(7, salt);
             stmtup.setInt(8, id);
-            stmtup.executeUpdate();
+            return stmtup.executeUpdate() > 0;
         } catch (SQLException e) {
             log.error("Ошибка SQL: ", e);
         }
+        return false;
     }
 
     @Override

@@ -15,24 +15,24 @@ import ru.devdem.devdemAuth.utils.DatabaseManager;
 public final class DevdemAuth extends JavaPlugin {
 
     private static DevdemAuth instance;
+    private DatabaseManager databaseManager;
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
+        saveDefaultConfig();
+        instance = this;
+
         PluginManager manager = getServer().getPluginManager();
         FileConfiguration config = getConfig();
-        saveDefaultConfig();
-
-        instance = this;
 
         String host = config.getString("mysql.host");
         int port = config.getInt("mysql.port");
         String database = config.getString("mysql.database");
         String username = config.getString("mysql.username");
         String password = config.getString("mysql.password");
-        boolean useSSL = config.getBoolean("mysql.useSSL"); // not working properly
+        boolean useSSL = config.getBoolean("mysql.useSSL");
 
-        DatabaseManager.getInstance(host, port, database, username, password);
+        databaseManager = DatabaseManager.getInstance(host, port, database, username, password, useSSL);
         NoMoveListener noMoveListener = new NoMoveListener();
         manager.registerEvents(noMoveListener, this);
         registerCommand("log", new LoginCommand(noMoveListener));
@@ -42,14 +42,24 @@ public final class DevdemAuth extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        if (databaseManager != null) {
+            databaseManager.disconnect();
+        }
+        getServer().getMessenger().unregisterOutgoingPluginChannel(this);
     }
 
-    public static void ConnectUser(Player player) {
+    public static void connectUser(Player player) {
         if (player == null) {
-            System.out.println("Ошибка ConnectUser: player == null");
+            if (instance != null) {
+                instance.getLogger().warning("Не удалось подключить игрока к lobby: player == null");
+            }
             return;
         }
+        if (instance == null || !instance.isEnabled()) {
+            player.sendMessage(Component.text("Сервер авторизации еще не готов к переносу в lobby."));
+            return;
+        }
+
         player.sendMessage(Component.text("Приятной игры!"));
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF("Connect");
@@ -57,5 +67,9 @@ public final class DevdemAuth extends JavaPlugin {
         player.sendPluginMessage(instance, "BungeeCord", out.toByteArray());
     }
 
+    @Deprecated(forRemoval = true)
+    public static void ConnectUser(Player player) {
+        connectUser(player);
+    }
 
 }
